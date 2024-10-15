@@ -10,7 +10,7 @@ index = faiss.read_index("bible_verses.index")
 with open('bible_verse_metadata.json', 'r') as f:
     metadata = json.load(f)
 
-def get_similar_verses(book, chapter, verse, k=10):
+def get_similar_verses(book, chapter, verse, k=50):
     try:
         query_index = next(i for i, m in enumerate(metadata) 
                            if m['book'] == book and m['chapter'] == int(chapter) and m['verse'] == int(verse))
@@ -37,15 +37,10 @@ def similar_verses():
     book = data.get('book')
     chapter = data.get('chapter')
     verse = data.get('verse')
-
-    print(data)
-    
     if not all([book, chapter, verse]):
         return jsonify({'error': 'Missing book, chapter, or verse'}), 400
 
     similar = get_similar_verses(book, chapter, verse)
-    for i, verse in enumerate(similar):
-        print(f"{i+1}. {verse['reference']}: {verse['text']}")
     return jsonify(similar)
 
 if __name__ == '__main__':

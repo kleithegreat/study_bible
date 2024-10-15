@@ -76,24 +76,28 @@ const StudyBible: React.FC = () => {
     } else {
       setSelectedVerse({ verse, content });
       setIsLoadingRelated(true);
+      setError(null);
       try {
+        const bookData = (bibleData as Record<string, Book>)[selectedBook];
         const response = await fetch('http://localhost:5000/api/similar_verses', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            book: selectedBook,
+            book: bookData.name,
             chapter: selectedChapter,
             verse: verse,
           }),
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch related verses');
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch related verses: ${errorText}`);
         }
         const data = await response.json();
         setRelatedVerses(data);
       } catch (err) {
+        console.error('Error fetching related verses:', err);
         setError(err instanceof Error ? err.message : 'An error occurred while fetching related verses');
         setRelatedVerses([]);
       } finally {
@@ -181,12 +185,12 @@ const StudyBible: React.FC = () => {
         </ScrollArea>
       </div>
       
-      <div className="w-1/3 bg-gray-100 p-4 rounded-md flex flex-col">
-        <Card>
+      <div className="w-1/3 bg-gray-100 p-4 rounded-md flex flex-col h-full max-h-full">
+        <Card className="flex-1 flex flex-col h-full">
           <CardHeader>
             <CardTitle>Related Verses</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 overflow-auto">
             {isLoadingRelated ? (
               <div className="flex items-center justify-center h-24">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -194,7 +198,7 @@ const StudyBible: React.FC = () => {
               </div>
             ) : selectedVerse ? (
               relatedVerses.length > 0 ? (
-                <ScrollArea className="h-[calc(100vh-200px)]">
+                <ScrollArea className="h-full">
                   {relatedVerses.map((verse, index) => (
                     <div key={index} className="mb-4">
                       <p className="font-semibold">{verse.reference}</p>
